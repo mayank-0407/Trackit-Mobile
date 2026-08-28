@@ -263,7 +263,13 @@ The repository now also contains a standalone React Native Expo mobile app. It w
 
 ### Mobile Source Map
 
-- `App.tsx` owns the mobile app state, tab navigation, dashboard, activity, settings, account and transaction workflows.
+- `App.tsx` is the Expo entry export for `src/app/TrackItApp.tsx`.
+- `src/app/TrackItApp.tsx` owns mobile hydration, tab navigation, cross-feature state, and balance-safe mutations.
+- `src/components/BottomNav.tsx` owns footer tab navigation and `src/components/TransactionRow.tsx` owns shared transaction presentation.
+- `src/features/dashboard/DashboardScreen.tsx`, `src/features/activity/ActivityScreen.tsx`, and `src/features/insights/InsightsScreen.tsx` own the read-only dashboard, activity, and analytics surfaces.
+- `src/features/accounts/*` owns account listing and account editing.
+- `src/features/settings/*` owns profile Settings, Categories, and category editing.
+- `src/features/transactions/*` owns add, detail, and edit transaction flows.
 - `src/store.ts` defines `Account`, `Transaction`, `Category`, `Profile`, and `Store`, plus seed data, formatting, AsyncStorage loading, migration, and saving.
 - `src/settingsStyles.ts` contains Settings, Categories, profile, and Insights styles.
 - `src/transactionStyles.ts` contains transaction details, edit controls, and selector styles.
