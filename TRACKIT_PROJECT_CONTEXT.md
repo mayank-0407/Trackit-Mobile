@@ -258,19 +258,25 @@ The repository now also contains a standalone React Native Expo mobile app. It w
 - `npm run android` - starts Expo for Android.
 - `npm run web` - starts the Expo web target.
 - `npx tsc --noEmit` - current validation command; it passes after the latest changes.
-- `@react-native-async-storage/async-storage` provides local persistence.
+- `expo-sqlite` provides local persistence through `expo-sqlite/kv-store`.
 - `lucide-react-native` provides interface icons.
 
 ### Mobile Source Map
 
-- `App.tsx` owns the mobile app state, tab navigation, dashboard, activity, settings, account and transaction workflows.
+- `App.tsx` is the Expo entry export for `src/app/TrackItApp.tsx`.
+- `src/app/TrackItApp.tsx` owns mobile hydration, tab navigation, cross-feature state, and balance-safe mutations.
+- `src/components/BottomNav.tsx` owns footer tab navigation and `src/components/TransactionRow.tsx` owns shared transaction presentation.
+- `src/features/dashboard/DashboardScreen.tsx`, `src/features/activity/ActivityScreen.tsx`, and `src/features/insights/InsightsScreen.tsx` own the read-only dashboard, activity, and analytics surfaces.
+- `src/features/accounts/*` owns account listing and account editing.
+- `src/features/settings/*` owns profile Settings, Categories, and category editing.
+- `src/features/transactions/*` owns add, detail, and edit transaction flows.
 - `src/store.ts` defines `Account`, `Transaction`, `Category`, `Profile`, and `Store`, plus seed data, formatting, AsyncStorage loading, migration, and saving.
 - `src/settingsStyles.ts` contains Settings, Categories, profile, and Insights styles.
 - `src/transactionStyles.ts` contains transaction details, edit controls, and selector styles.
 
 ### Mobile Persistence Contract
 
-The app uses AsyncStorage key `trackit-mobile-store-v1`; it intentionally uses structured JSON rather than CSV because accounts, transactions, categories, IDs, and balance mutations require reliable nested records and typed migration.
+The app uses SQLite-backed key-value storage with key `trackit-mobile-store-v1` in database `trackit.db`; it intentionally uses structured JSON rather than CSV because accounts, transactions, categories, IDs, and balance mutations require reliable nested records and typed migration. `expo-sqlite/kv-store` preserves the existing storage API while moving the persisted data into the device's SQLite-backed app storage.
 
 `Store` contains:
 
@@ -324,5 +330,6 @@ Insights derives totals directly from transactions. Its toggle switches between 
 ### Mobile Follow-Up Notes
 
 - The mobile app is currently local/offline and is not connected to the Next.js APIs, MongoDB, NextAuth, email, or web account.
+- Local records are saved in the app's SQLite database and persist across app restarts. They are still removed if the app is uninstalled or its app data is cleared.
 - There is no mobile test harness yet; validation currently relies on TypeScript compilation and manual Expo interaction.
 - The app’s large compressed `App.tsx` stylesheet includes stale editor diagnostics about old account picker style keys even though `npx tsc --noEmit` passes and current source references use dedicated picker/settings style modules. Reformatting `App.tsx` would improve maintainability but should be done separately from feature work.

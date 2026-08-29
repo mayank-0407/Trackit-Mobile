@@ -1,12 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SQLiteStorage } from 'expo-sqlite/kv-store';
 
 export type Account = { id: string; name: string; type: 'cash' | 'bank' | 'card'; balance: number; color: string; last4?: string };
-export type Transaction = { id: string; title: string; category: string; categoryId?: string; amount: number; type: 'expense' | 'income' | 'transfer'; date: string; account: string; accountId?: string; icon: string };
+export type Transaction = { id: string; title: string; description: string; category: string; categoryId?: string; amount: number; type: 'expense' | 'income' | 'transfer'; date: string; account: string; accountId?: string; icon: string };
 export type Category = { id: string; name: string; icon: string; color: string; kind: 'expense' | 'income' | 'both' };
 export type Profile = { name: string; email: string };
 export type Store = { accounts: Account[]; transactions: Transaction[]; categories: Category[]; profile: Profile };
 
 export const STORAGE_KEY = 'trackit-mobile-store-v1';
+export const DATABASE_NAME = 'trackit.db';
+const Storage = new SQLiteStorage(DATABASE_NAME);
 export const palette = { ink: '#17221B', muted: '#829087', line: '#E4E9E4', green: '#49A078', mint: '#E5F3EA', coral: '#E9785F', navy: '#1D3C4A', paper: '#F8FAF7' };
 
 export const seed: Store = {
@@ -17,11 +19,11 @@ export const seed: Store = {
     { id: 'visa', name: 'Visa credit', type: 'card', balance: -12840, color: palette.coral, last4: '0932' },
   ],
   transactions: [
-    { id: '1', title: 'Salary credited', category: 'Income', amount: 85000, type: 'income', date: 'Today, 09:42', account: 'HDFC Bank', icon: 'income' },
-    { id: '2', title: 'Blue Tokai Coffee', category: 'Food & drink', amount: -380, type: 'expense', date: 'Today, 08:15', account: 'Cash wallet', icon: 'food' },
-    { id: '3', title: 'Monthly rent', category: 'Home', amount: -24000, type: 'expense', date: 'Yesterday', account: 'HDFC Bank', icon: 'home' },
-    { id: '4', title: 'Sent to Priya', category: 'Transfer', amount: -2500, type: 'transfer', date: '16 Jun 2024', account: 'HDFC Bank', icon: 'transfer' },
-    { id: '5', title: 'Grocery run', category: 'Groceries', amount: -2160, type: 'expense', date: '15 Jun 2024', account: 'Visa credit', icon: 'bag' },
+    { id: '1', title: 'Salary credited', description: 'Salary credited', category: 'Income', amount: 85000, type: 'income', date: 'Today, 09:42', account: 'HDFC Bank', icon: 'income' },
+    { id: '2', title: 'Blue Tokai Coffee', description: 'Blue Tokai Coffee', category: 'Food & drink', amount: -380, type: 'expense', date: 'Today, 08:15', account: 'Cash wallet', icon: 'food' },
+    { id: '3', title: 'Monthly rent', description: 'Monthly rent', category: 'Home', amount: -24000, type: 'expense', date: 'Yesterday', account: 'HDFC Bank', icon: 'home' },
+    { id: '4', title: 'Sent to Priya', description: 'Sent to Priya', category: 'Transfer', amount: -2500, type: 'transfer', date: '16 Jun 2024', account: 'HDFC Bank', icon: 'transfer' },
+    { id: '5', title: 'Grocery run', description: 'Grocery run', category: 'Groceries', amount: -2160, type: 'expense', date: '15 Jun 2024', account: 'Visa credit', icon: 'bag' },
   ],
   categories: [
     { id: 'food', name: 'Food & drink', icon: 'utensils', color: '#E9785F', kind: 'expense' },
@@ -33,5 +35,5 @@ export const seed: Store = {
 };
 
 export function formatMoney(value: number) { return `${value < 0 ? '-' : ''}₹${Math.abs(value).toLocaleString('en-IN')}`; }
-export async function loadStore() { const value = await AsyncStorage.getItem(STORAGE_KEY); if (!value) return seed; const stored = JSON.parse(value) as Partial<Store>; const accounts = stored.accounts ?? seed.accounts; const categories = (stored.categories ?? seed.categories).map(category => ({ ...category, kind: category.kind ?? 'expense' } as Category)); const transactions = (stored.transactions ?? seed.transactions).map(transaction => ({ ...transaction, accountId: transaction.accountId ?? accounts.find(account => account.name === transaction.account)?.id, categoryId: transaction.categoryId ?? categories.find(category => category.name === transaction.category)?.id })); return { ...seed, ...stored, accounts, categories, transactions, profile: stored.profile ?? seed.profile }; }
-export async function saveStore(store: Store) { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }
+export async function loadStore() { const value = await Storage.getItemAsync(STORAGE_KEY); if (!value) return seed; const stored = JSON.parse(value) as Partial<Store>; const accounts = stored.accounts ?? seed.accounts; const categories = (stored.categories ?? seed.categories).map(category => ({ ...category, kind: category.kind ?? 'expense' } as Category)); const transactions = (stored.transactions ?? seed.transactions).map(transaction => ({ ...transaction, description: transaction.description ?? transaction.title, accountId: transaction.accountId ?? accounts.find(account => account.name === transaction.account)?.id, categoryId: transaction.categoryId ?? categories.find(category => category.name === transaction.category)?.id })); return { ...seed, ...stored, accounts, categories, transactions, profile: stored.profile ?? seed.profile }; }
+export async function saveStore(store: Store) { await Storage.setItemAsync(STORAGE_KEY, JSON.stringify(store)); }
